@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+
+    <!-- Specify meta information about the package. -->
+    <name>perfect_control</name>
+    <version>0.1.0</version>
+    <description>Listen to ROS joint topic and set Gazebo joint angles accordingly</description>
+    <maintainer email="aschaef@cs.uni-freiburg.de">Alexander Schaefer</maintainer>
+    <license>MIT</license>
+    <url type="website">https://github.com/acschaefer/perfect_control</url>
+    <author email="aschaef@cs.uni-freiburg.de">Alexander Schaefer</author>
+
+    <!-- Specify dependencies of the package. -->
+    <depend>sensor_msgs</depend>
+    <depend>gazebo_msgs</depend>
+    <depend>rospy</depend>
+    <buildtool_depend>catkin</buildtool_depend>
+
+</package>

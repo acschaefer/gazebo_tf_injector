@@ -1,0 +1,170 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""The perfect_control ROS node
+
+This ROS node makes sure the configuration of the robot in the Gazebo simulator
+always exactly represents the desired configuration published via ROS JointState
+messages. It bypasses the usual control pipeline, which consists of feeding the
+desired configuration to joint controllers and letting them control the physical
+model of the robot in the simulator. 
+
+The perfect_control node is especially useful if you want to use Gazebo as a 
+visualization tool, without relying on its physics engine.
+
+In order to start the perfect_control node, you need to tell it which robot is 
+shall control and where the desired configuration of the robot is published. 
+This information is passed in the form of private ROS parameters. See the
+following examples:
+
+Examples: 
+    # Control a robot named "R2D2" by listening to sensor_msgs/JointState 
+    # messages on topic "/R2D2/joints".
+    $ rosrun perfect_control perfect_control _robot:=R2D2 _topic:=/R2D2/joints
+
+    # Control a robot named "baxter" by listening to topic "/joint_state".
+    $ rosrun perfect_control perfect_control _robot:=baxter _topic:=/joint_state
+"""
+
+
+# Import the required ROS libraries.
+import rospy
+import sensor_msgs.msg
+import gazebo_msgs.srv
+
+
+class PerfectControl:
+    """The PerfectControl class
+
+    Listens to joint state messages, translates them to Gazebo service calls,
+    and configures the robot in Gazebo accordingly.
+    """
+
+    def __init__(self, robot='robot', topic='/joint_states'):
+        """Constructor.
+        """
+
+        # Set member variables.
+        self.last_joint_positions = []
+        self.robot = robot
+        self.topic = topic
+        self.set_configuration_service = '/gazebo/set_model_configuration'
+        self.get_state_service = '/gazebo/get_model_state'
+        self.set_state_service = '/gazebo/set_model_state'
+        self.get_state = None
+        self.set_state = None
+        self.set_configuration = None
+
+        # Print configuration information.
+        rospy.loginfo('Robot name: {}.'.format(robot))
+        rospy.loginfo('Joint state topic: {}.'.format(topic))
+
+        # Wait for the required Gazebo services to become available.
+        rospy.loginfo('Waiting for Gazebos service to become available ...')
+        rospy.wait_for_service(self.get_state_service)
+        rospy.wait_for_service(self.set_state_service)
+        rospy.wait_for_service(self.set_configuration_service)
+        rospy.loginfo('All required services are available.')
+
+        # Create functions that encapsulate the ROS service call to Gazebo.
+        self.get_state = rospy.ServiceProxy(
+            self.get_state_service, 
+            gazebo_msgs.srv.GetModelState)
+        self.set_state = rospy.ServiceProxy(
+            self.set_state_service, 
+            gazebo_msgs.srv.SetModelState)
+        self.set_configuration = rospy.ServiceProxy(
+            self.set_configuration_service, 
+            gazebo_msgs.srv.SetModelConfiguration)
+
+
+    def control(self, joint_states):
+        """Update the configuration of the simulated robot model in Gazebo.
+
+        This method takes in a ROS sensor_msgs/JointState message, reads the
+        robot configuration, and sends a service call to Gazebo to configure the
+        robot accordingly.
+
+        Args:
+            joint_states (sensor_msg.msg.JointStates): joint state message.
+        """
+
+        # Create two lists that store the names and positions of the updated
+        # joint.
+        joint_names = []
+        joint_positions =[]
+        if len(self.last_joint_positions) == len(joint_states.position):
+            for i in range(len(joint_states.position)):
+                if joint_states.position[i] \
+                    != self.last_joint_positions[i]:
+                    joint_names.append(joint_states.name[i])
+                    joint_positions.append(joint_states.position[i])
+        
+        # Store the joint states for reference during the next iteration.
+        self.last_joint_positions = joint_states.position
+
+        # If the position of any joint changed, update Gazebo.
+        if joint_names:
+            # # Get the current pose of the robot.
+            # try:
+            #     get_state_call = get_state(model_name=robot)
+            #     if not get_state_call.success:
+            #         rospy.logwarn('Failed to get robot state: {}.'.format(
+            #             get_state_call.status_message))
+            # except Exception as e:
+            #     rospy.logerr(e)
+
+            # Call Gazebo and configure the robot according to the joint
+            # positions in the input message.
+            try:
+                # Call Gazebo via a ROS service.
+                set_configuration_call = self.set_configuration(
+                    model_name=robot, 
+                    joint_names=joint_names, 
+                    joint_positions=joint_positions)
+
+                # If the service call was unsuccessful, log an error message.
+                if not set_configuration_call.success:
+                    rospy.logerr(
+                        'Failed to set robot configuration: {}.'.format(
+                            set_configuration_call.status_message))
+            except Exception as e:
+                rospy.logerr(e)
+
+            # if get_state_call.success:
+            # try:
+            #     model_state = gazebo_msgs.msg.ModelState(
+            #         model_name=robot,
+            #         pose=gazebo_msgs.msg.geometry_msgs.msg.Pose(),#get_state_call.pose,
+            #         twist=gazebo_msgs.msg.geometry_msgs.msg.Twist() #get_state_call.twist
+            #         )
+
+            #     set_state_call = self.set_state(model_state=model_state)
+            #     if not set_state_call.success:
+            #         rospy.logwarn('Failed to set robot state: {}.'.format(
+            #             set_state_call.status_message))
+            # except Exception as e:
+            #     rospy.logerr(e)
+
+
+# Start the perfect_control ROS node.
+if __name__ == '__main__':
+    # Register the node with the roscore.
+    rospy.init_node('perfect_control')
+
+    # Read the input parameters.
+    rospy.loginfo('Reading parameters from ROS parameter server ...')
+    if rospy.has_param('~robot'):
+        robot = rospy.get_param('~robot')
+    if rospy.has_param('~joint_state_topic'):
+        topic = rospy.get_param('~joint_state_topic')
+
+    # Create an object that transforms joint state messages to Gazebo service
+    # calls.
+    controller = PerfectControl(robot, topic)
+    
+    # Set up the callback to process joint state messages.
+    rospy.Subscriber(topic, sensor_msgs.msg.JointState, controller.control)
+
+    # Process all subsequent joint state messages.
+    rospy.loginfo('Processing joint state messages ...')
+    rospy.spin()  
