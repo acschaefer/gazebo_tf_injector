@@ -61,13 +61,7 @@ class PerfectControl:
         rospy.wait_for_service(self.set_configuration_service)
         rospy.loginfo('Gazebo service is available.')
 
-        # Create functions that encapsulate the ROS service call to Gazebo.
-        self.get_state = rospy.ServiceProxy(
-            self.get_state_service, 
-            gazebo_msgs.srv.GetModelState)
-        self.set_state = rospy.ServiceProxy(
-            self.set_state_service, 
-            gazebo_msgs.srv.SetModelState)
+        # Create the function that encapsulates the ROS service call to Gazebo.
         self.set_configuration = rospy.ServiceProxy(
             self.set_configuration_service, 
             gazebo_msgs.srv.SetModelConfiguration)
