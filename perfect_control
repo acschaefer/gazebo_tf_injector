@@ -8,10 +8,10 @@ messages. It bypasses the usual control pipeline, which consists of feeding the
 desired configuration to joint controllers and letting them control the physical
 model of the robot in the simulator. 
 
-The perfect_control node is especially useful if you want to use Gazebo as a 
+The perfect_control node is particularly useful if you want to use Gazebo as a 
 visualization tool, without relying on its physics engine.
 
-In order to start the perfect_control node, you need to tell it which robot is 
+In order to start the perfect_control node, you need to tell it which robot it 
 shall control and where the desired configuration of the robot is published. 
 This information is passed in the form of private ROS parameters. See the
 following examples:
@@ -48,8 +48,6 @@ class PerfectControl:
         self.robot = robot
         self.topic = topic
         self.set_configuration_service = '/gazebo/set_model_configuration'
-        self.get_state_service = '/gazebo/get_model_state'
-        self.set_state_service = '/gazebo/set_model_state'
         self.get_state = None
         self.set_state = None
         self.set_configuration = None
@@ -59,11 +57,9 @@ class PerfectControl:
         rospy.loginfo('Joint state topic: {}.'.format(topic))
 
         # Wait for the required Gazebo services to become available.
-        rospy.loginfo('Waiting for Gazebos service to become available ...')
-        rospy.wait_for_service(self.get_state_service)
-        rospy.wait_for_service(self.set_state_service)
+        rospy.loginfo('Waiting for Gazebo service to become available ...')
         rospy.wait_for_service(self.set_configuration_service)
-        rospy.loginfo('All required services are available.')
+        rospy.loginfo('Gazebo service is available.')
 
         # Create functions that encapsulate the ROS service call to Gazebo.
         self.get_state = rospy.ServiceProxy(
