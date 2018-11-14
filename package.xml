@@ -4,7 +4,7 @@
     <!-- Specify meta information about the package. -->
     <name>perfect_control</name>
     <version>0.1.0</version>
-    <description>Listen to ROS joint topic and set Gazebo joint angles accordingly</description>
+    <description>Listen to ROS joint topic and set Gazebo robot configuration accordingly</description>
     <maintainer email="aschaef@cs.uni-freiburg.de">Alexander Schaefer</maintainer>
     <license>MIT</license>
     <url type="website">https://github.com/acschaefer/perfect_control</url>
