@@ -125,6 +125,8 @@ if __name__ == '__main__':
 
     # Read the input parameters.
     rospy.loginfo('Reading parameters from ROS parameter server ...')
+    robot = 'robot'
+    topic = '/joint_states'
     if rospy.has_param('~robot'):
         robot = rospy.get_param('~robot')
     if rospy.has_param('~joint_state_topic'):
