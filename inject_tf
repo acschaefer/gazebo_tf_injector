@@ -1,0 +1,147 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""The perfect_control ROS node
+
+This ROS node makes sure the configuration of the robot in the Gazebo simulator
+always exactly represents the desired configuration published via ROS JointState
+messages. It bypasses the usual control pipeline, which consists of feeding the
+desired configuration to joint controllers and letting them control the physical
+model of the robot in the simulator. 
+
+The perfect_control node is particularly useful if you want to use Gazebo as a 
+visualization tool, without relying on its physics engine.
+
+In order to start the perfect_control node, you need to tell it which robot it 
+shall control and where the desired configuration of the robot is published. 
+This information is passed in the form of private ROS parameters. See the
+following examples:
+
+Examples: 
+    # Control a robot named "R2D2" by listening to sensor_msgs/JointState 
+    # messages on topic "/R2D2/joints".
+    $ rosrun perfect_control perfect_control _robot:=R2D2 _topic:=/R2D2/joints
+
+    # Control a robot named "baxter" by listening to topic "/joint_state".
+    $ rosrun perfect_control perfect_control _robot:=baxter _topic:=/joint_state
+"""
+
+
+# Import the required ROS libraries.
+import rospy
+import geometry_msgs.msg
+import sensor_msgs.msg
+import gazebo_msgs.srv
+import tf.msg
+
+
+class TfInjector:
+    """The PerfectControl class
+
+    Listens to joint state messages, translates them to Gazebo service calls,
+    and configures the robot in Gazebo accordingly.
+    """
+
+    def __init__(self):
+        """Constructor.
+        """
+
+        self.world_frame = 'world'
+        self.wait_duration = rospy.Duration.from_sec(1e-3)
+        self.transform_listener = tf.TransformListener()
+
+        self.get_world_properties_service = '/gazebo/get_world_properties'
+        self.get_model_properties_service = '/gazebo/get_model_properties'
+        self.set_link_state_service = '/gazebo/set_link_state'
+
+        # Wait for the required Gazebo services to become available.
+        rospy.loginfo('Waiting for Gazebo service to become available ...')
+        rospy.wait_for_service(self.get_world_properties_service)
+        rospy.wait_for_service(self.get_model_properties_service)
+        rospy.wait_for_service(self.set_link_state_service)
+        rospy.loginfo('Gazebo service is available.')
+
+        # Create the function that encapsulates the ROS service call to Gazebo.
+        self.get_world_properties = rospy.ServiceProxy(
+            self.get_world_properties_service, 
+            gazebo_msgs.srv.GetWorldProperties)
+
+        self.get_model_properties = rospy.ServiceProxy(
+            self.get_model_properties_service,
+            gazebo_msgs.srv.GetModelProperties
+        )
+        self.set_link_state = rospy.ServiceProxy(
+            self.set_link_state_service,
+            gazebo_msgs.srv.SetLinkState
+        )
+
+        world_properties = self.get_world_properties()
+        self.models = [model for model in world_properties.model_names]
+        
+        self.links = set()
+        for model in self.models:
+            model_properties = self.get_model_properties(model_name=model)
+            
+            for link in model_properties.body_names:
+                self.links.add(link)
+
+        rospy.Subscriber('/tf', tf.msg.tfMessage, callback=self.inject, queue_size=1)
+    
+
+    def inject(self, msg):
+        """Update the configuration of the simulated robot model in Gazebo.
+
+        This method takes in a ROS sensor_msgs/JointState message, reads the
+        robot configuration, and sends a service call to Gazebo to configure the
+        robot accordingly.
+
+        Args:
+            joint_states (sensor_msg.msg.JointStates): joint state message.
+        """
+        
+        for transform in msg.transforms:
+            if transform.child_frame_id in self.links:
+                frame = transform.child_frame_id
+                time = transform.header.stamp
+                try:
+                    self.transform_listener.waitForTransform(frame, self.world_frame, time, self.wait_duration)
+                    position, orientation = self.transform_listener.lookupTransform(
+                        self.world_frame, frame, time)
+                except tf.Exception as e:
+                    print(e)
+                    continue
+                #rospy.loginfo('Injecting transform {} into Gazebo.'.format(frame))
+
+                position = geometry_msgs.msg.Point(*position)
+                orientation = geometry_msgs.msg.Quaternion(*orientation)
+                
+                pose = geometry_msgs.msg.Pose(position=position, orientation=orientation)
+                link_state = gazebo_msgs.msg.LinkState(link_name=frame, 
+                    reference_frame=self.world_frame, pose=pose)
+                call = self.set_link_state(link_state=link_state)
+                if not call.success:
+                    rospy.logerr_throttle(1, 
+                        'Failed to set pose of link \"{}\": {}.'.format(frame, call.status_message))
+                else:
+                    pass
+                    # print('{} : {}'.format(frame, position))
+        
+
+
+# Start the perfect_control ROS node.
+if __name__ == '__main__':
+    # Register the node with the roscore.
+    rospy.init_node('tf_injector')
+
+    # Read the input parameters.
+    rospy.loginfo('Reading parameters from ROS parameter server ...')
+
+    # Create an object that transforms joint state messages to Gazebo service
+    # calls.
+    controller = TfInjector()
+    
+    # Set up the callback to process joint state messages.
+    #rospy.Subscriber(topic, sensor_msgs.msg.JointState, controller.control)
+
+    # Process all subsequent joint state messages.
+    #rospy.loginfo('Processing joint state messages ...')
+    rospy.spin()  
