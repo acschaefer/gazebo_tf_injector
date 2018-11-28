@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This script builds the URDF description of the robot by compiling all xacro
+files, displays the robot in the Gazebo simulator, and allows to control the
+individual joints via a graphical interface. -->
+
+<launch>
+
+    <!-- Compile the URDF and load the resulting robot description into the ROS
+    parameter server. -->
+    <include file="$(find lula_yumi)/launch/yumi_description.launch"/>
+    <!-- <param name="robot_description" value="&lt;robot&gt;&lt;/robot&gt;"/> -->
+
+    <!-- <env name="GAZEBO_PLUGIN_PATH" value="$(env PATH)"/> -->
+    <!-- <env name="GAZEBO_MODEL_PATH" value="$(find yumi_description)/../"/> -->
+
+    <!-- Start Gazebo and load an empty world. -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="use_sim_time" value="true"/>
+        <arg name="paused" value="false"/>
+        <arg name="verbose" value="true"/>
+        <!-- <remap from="tf" to="gazebo_tf"/> -->
+    </include>
+
+    <!-- <node name="upload_sdf" pkg="lula_yumi" type="upload_sdf"/> -->
+
+    <!-- Run a script that sends the service call to Gazebo requesting that it
+    spawns the robot using the robot description in the parameter server. -->
+    <node 
+        name="urdf_spawner" 
+        pkg="gazebo_ros" 
+        type="spawn_model" 
+        respawn="false" 
+        output="screen" 
+        args="-urdf -model mobile_yumi -param robot_description"/>
+
+    <!-- <node 
+        name="sdf_spawner" 
+        pkg="gazebo_ros" 
+        type="spawn_model" 
+        respawn="false" 
+        output="screen" 
+        args="-sdf -model mobile_yumi -file $(find lula_yumi)/urdf/lula_yumi_static.sdf"/> -->
+
+
+</launch>
