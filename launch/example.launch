@@ -27,6 +27,6 @@ Gazebo at the same time. -->
     
     <!-- Upload the robot model to Gazebo and run the plugin that injects the
     ROS TF poses into the Gazebo model. -->
-    <node name="upload_gazebo_model" pkg="gazebo_tf_injector" type="upload_gazebo_model" args="$(find gazebo_tf_injector)/models/robot.urdf"/>
+    <node name="upload_model" pkg="gazebo_tf_injector" type="upload_model" args="$(find gazebo_tf_injector)/models/robot.urdf"/>
 
 </launch>

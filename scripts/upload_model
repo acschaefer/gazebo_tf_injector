@@ -1,0 +1,63 @@
+#!/bin/bash 
+# This script takes an XACRO or URDF file, converts it to SDF, and loads the SDF
+# into Gazebo.
+
+# Exit immediately if any of the following commands exits with a non-zero
+# status.
+set -e
+
+# Define variables for bold and normal font.
+bf=$(tput bold)
+nf=$(tput sgr0)
+
+# Check if the input file is given.
+if [ $# -ne 1 ] 
+then
+    echo "Please specify exactly one XACRO or URDF file to upload."
+fi
+
+# Read the input file from the command line.
+filepath=$1
+
+# Strip the extension from the given file to get the name of the robot model.
+filename="${filepath%.*}"
+
+# If given an XACRO file, convert it to URDF.
+if [[ "${filepath}" == *.xacro ]]
+then
+    echo "${bf}Converting XACRO to URDF ...${nf}"
+    rosrun xacro xacro \
+        --inorder \
+        -o "${filename}".urdf \
+        "${file}"
+fi
+
+# Convert the URDF file to SDF.
+echo "${bf}Converting URDF to SDF ...${nf}"
+gz sdf \
+    --print "${filename}".urdf \
+    > "${filename}"_model.sdf
+
+# Convert the SDF model to an SDF actor.
+# By default, robots are converted to SDF models. In order for the robot not to
+# be affected by Gazebo's physics engine, it needs to be converted to an actor.
+echo "${bf}Converting robot from SDF model to SDF actor ...${nf}"
+rosrun gazebo_tf_injector sdf_model_to_actor \
+    "${filename}"_model.sdf \
+    "${filename}"_actor.sdf
+
+# Wait until Gazebo is started up.
+echo "${bf}Waiting for Gazebo to be started ..."
+while ! rosservice list 2> /dev/null | grep "/gazebo/set_physics_properties" -q 
+do
+    sleep 0.2
+done
+
+# Upload the robot actor to Gazebo.
+echo "${bf}Uploading robot SDF to Gazebo ...${nf}"
+rosrun gazebo_ros spawn_model \
+    -sdf \
+    -model robot \
+    -file "${filename}"_actor.sdf
+
+echo "${bf}Done.${nf}"
