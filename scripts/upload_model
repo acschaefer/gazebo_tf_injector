@@ -29,7 +29,7 @@ then
     rosrun xacro xacro \
         --inorder \
         -o "${filename}".urdf \
-        "${file}"
+        "${filepath}"
 fi
 
 # Convert the URDF file to SDF.
