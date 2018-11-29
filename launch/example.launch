@@ -3,11 +3,11 @@ of a simple robot via a GUI. The robot configuration is displayed in Rviz and in
 Gazebo at the same time. -->
 <launch>
 
-    <!-- Specify the robot model. -->
-    <param name="model" value="$(find gazebo_tf_injector)/models/robot.urdf"/>
+    <!-- Specify the robot model file. -->
+    <arg name="urdf" default="$(find gazebo_tf_injector)/models/robot.urdf"/>
 
     <!-- Upload the robot description to the ROS parameter server. -->
-    <param name="robot_description" textfile="$(find gazebo_tf_injector)/models/robot.urdf"/>
+    <param name="robot_description" textfile="$(arg urdf)"/>
 
     <!-- Start the GUI that lets the user control the states of the individual
     joints of the robot. -->
@@ -27,6 +27,6 @@ Gazebo at the same time. -->
     
     <!-- Upload the robot model to Gazebo and run the plugin that injects the
     ROS TF poses into the Gazebo model. -->
-    <node name="upload_model" pkg="gazebo_tf_injector" type="upload_model" args="$(find gazebo_tf_injector)/models/robot.urdf"/>
+    <node name="upload_model" pkg="gazebo_tf_injector" type="upload_model" args="$(arg urdf)"/>
 
 </launch>
