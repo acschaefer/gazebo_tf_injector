@@ -1,0 +1,68 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""Convert SDF model to SDF actor.
+
+This script parses the given SDF. Whenever it encounters an SDF model, it
+removes all joints from this model, converts it to an actor, and adds the
+gazebo_tf_injector plugin to it.
+"""
+
+import argparse
+import xml.etree.ElementTree 
+import os
+
+
+def model_to_actor(root):
+    """Convert all SDF models above the given node to SDF actors.
+    """
+    # Iterate over all models in the SDF.
+    for model in root.findall('model'):
+        # SDF actors cannot be nested, so remove all nested models.
+        for nested_model in model.findall('model'): 
+            model.remove(nested_model)
+
+        # Remove all joints.
+        for joint in model.findall('joint'):
+            model.remove(joint)
+
+        # Actors are static by definition. Remove the static tag.
+        for static in model.findall('static'):
+            model.remove(static)
+
+        # Add the plugin to the actor.
+        attrib = {}
+        attrib['filename'] = 'libgazebo_tf_injector.so'
+        attrib['name'] = 'gazebo_tf_injector'
+        plugin = xml.etree.ElementTree.Element('plugin', attrib=attrib)
+        model.append(plugin)
+        
+        # Convert the model to an actor.
+        model.tag = 'actor'
+
+
+# Parse an SDF, convert all models to actors, add the gazebo_tf_injector plugin,
+# and return it on the command line or write it to an output file.
+if __name__ == '__main__': 
+    # Parse the command line arguments.
+    parser = argparse.ArgumentParser(
+        description='Convert SDF models to SDF actors') 
+    parser.add_argument('input_file')
+    parser.add_argument('output_file', nargs='*') 
+    args = parser.parse_args()
+
+    # Make sure output file extension is .sdf.
+    if args.output_file:
+        ext = os.path.splitext(args.output_file[0])[1].lower()
+        if ext not in ['.sdf', '.xml']:
+            args.output_file[0] += '.sdf'
+
+    # Convert all SDF models to actors.
+    sdf = xml.etree.ElementTree.parse(args.input_file)
+    root = sdf.getroot()
+    model_to_actor(root)
+
+    # Write the file to the command line or the given output file.
+    if args.output_file:
+        sdf.write(args.output_file[0])
+    else:
+        xml.etree.ElementTree.dump(root)

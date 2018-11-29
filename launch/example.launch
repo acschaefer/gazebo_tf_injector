@@ -1,0 +1,32 @@
+<!-- Example script for gazebo_tf_injector. Allows to control the joint states
+of a simple robot via a GUI. The robot configuration is displayed in Rviz and in
+Gazebo at the same time. -->
+<launch>
+
+    <!-- Specify the robot model. -->
+    <param name="model" value="$(find gazebo_tf_injector)/models/robot.urdf"/>
+
+    <!-- Upload the robot description to the ROS parameter server. -->
+    <param name="robot_description" textfile="$(find gazebo_tf_injector)/models/robot.urdf"/>
+
+    <!-- Start the GUI that lets the user control the states of the individual
+    joints of the robot. -->
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+        <param name="use_gui" value="true"/>
+    </node>
+
+    <!-- Use the robot description and the joint states to compute the poses of
+    the robot links. -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher"/>
+
+    <!-- Display the robot configuration in Rviz. -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_tf_injector)/config/example.rviz" required="true"/>
+    
+    <!-- Start the Gazebo simulator. -->
+    <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="verbose worlds/empty.world" required="true"/>
+    
+    <!-- Upload the robot model to Gazebo and run the plugin that injects the
+    ROS TF poses into the Gazebo model. -->
+    <node name="upload_gazebo_model" pkg="gazebo_tf_injector" type="upload_gazebo_model" args="$(find gazebo_tf_injector)/models/robot.urdf"/>
+
+</launch>
