@@ -7,8 +7,8 @@
   <url type="website">https://github.com/acschaefer/gazebo_tf_injector</url>
   <license>MIT</license>
   
-  <maintainer email="aschaefer@nvidia.com">Alexander Schaefer</maintainer>
-  <author email="aschaefer@nvidia.com">Alexander Schaefer</author>
+  <maintainer email="aschaef@cs.uni-freiburg.de">Alexander Schaefer</maintainer>
+  <author email="aschaef@cs.uni-freiburg.de">Alexander Schaefer</author>
 
   <depend>roscpp</depend>
   <depend>tf</depend>
