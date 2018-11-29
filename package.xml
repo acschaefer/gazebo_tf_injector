@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <package format="2">
 
-  <name>gazebo_tf_injector</name>
-  <version>0.1.0</version>
-  <description>Inject ROS TF link poses into Gazebo models</description>
-  <url type="website">https://github.com/acschaefer/gazebo_tf_injector</url>
-  <license>MIT</license>
-  
-  <maintainer email="aschaef@cs.uni-freiburg.de">Alexander Schaefer</maintainer>
-  <author email="aschaef@cs.uni-freiburg.de">Alexander Schaefer</author>
+    <name>gazebo_tf_injector</name>
+    <version>0.1.0</version>
+    <description>Inject ROS TF link poses into Gazebo models</description>
+    <url type="website">https://github.com/acschaefer/gazebo_tf_injector</url>
+    <license>MIT</license>
 
-  <depend>roscpp</depend>
-  <depend>tf</depend>
-  <buildtool_depend>catkin</buildtool_depend>
+    <maintainer email="aschaef@cs.uni-freiburg.de">Alexander Schaefer</maintainer>
+    <author email="aschaef@cs.uni-freiburg.de">Alexander Schaefer</author>
+
+    <depend>roscpp</depend>
+    <depend>tf</depend>
+    <buildtool_depend>catkin</buildtool_depend>
 
 </package>
