@@ -13,5 +13,8 @@
     <depend>roscpp</depend>
     <depend>tf</depend>
     <buildtool_depend>catkin</buildtool_depend>
+    <export>
+        <gazebo_ros gazebo_plugin_path="${prefix}/lib"/>
+    </export>
 
 </package>
