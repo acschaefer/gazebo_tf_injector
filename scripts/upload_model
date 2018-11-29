@@ -17,7 +17,7 @@ then
 fi
 
 # Read the input file from the command line.
-filepath=$1
+filepath=$(readlink -f $1)
 
 # Strip the extension from the given file to get the name of the robot model.
 filename="${filepath%.*}"
