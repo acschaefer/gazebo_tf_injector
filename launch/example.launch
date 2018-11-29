@@ -23,7 +23,7 @@ Gazebo at the same time. -->
     <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_tf_injector)/config/example.rviz" required="true"/>
     
     <!-- Start the Gazebo simulator. -->
-    <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="verbose worlds/empty.world" required="true"/>
+    <node name="gazebo" pkg="gazebo_ros" type="gazebo" args="worlds/empty.world" required="true"/>
     
     <!-- Upload the robot model to Gazebo and run the plugin that injects the
     ROS TF poses into the Gazebo model. -->
