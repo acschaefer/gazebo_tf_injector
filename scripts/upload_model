@@ -11,7 +11,7 @@ bf=$(tput bold)
 nf=$(tput sgr0)
 
 # Check if the input file is given.
-if [ $# -ne 1 ] 
+if [ $# -lt 1 ] 
 then
     echo "Please specify exactly one XACRO or URDF file to upload."
 fi
