@@ -45,7 +45,7 @@ def model_to_actor(root):
 if __name__ == '__main__': 
     # Parse the command line arguments.
     parser = argparse.ArgumentParser(
-        description='Convert SDF models to SDF actors') 
+        description='Convert SDF models to SDF actors.') 
     parser.add_argument('input_file')
     parser.add_argument('output_file', nargs='*') 
     args = parser.parse_args()

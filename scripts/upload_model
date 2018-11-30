@@ -48,16 +48,17 @@ rosrun gazebo_tf_injector sdf_model_to_actor \
 
 # Wait until Gazebo is started up.
 echo "${bf}Waiting for Gazebo to be started ..."
-while ! rosservice list 2> /dev/null | grep "/gazebo/set_physics_properties" -q 
+while ! rosservice list 2> /dev/null | grep "/gazebo/spawn_sdf_model" -q 
 do
     sleep 0.2
 done
 
 # Upload the robot actor to Gazebo.
-echo "${bf}Uploading robot SDF to Gazebo ...${nf}"
+robot=$(rosrun gazebo_tf_injector extract_name "${filename}.urdf")
+echo "${bf}Uploading robot \"${robot}\" to Gazebo ...${nf}"
 rosrun gazebo_ros spawn_model \
     -sdf \
-    -model robot \
+    -model "${robot}" \
     -file "${filename}"_actor.sdf
 
 echo "${bf}Done.${nf}"
