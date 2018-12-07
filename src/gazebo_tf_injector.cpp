@@ -11,10 +11,10 @@ namespace gazebo {
     
     void GazeboTfInjector::Load(physics::ModelPtr model, sdf::ElementPtr sdf) {
         // Wait until the roscore is running and create a ROS node.
-        std::string nodeName = "GazeboTfInjector";
+        std::string nodeName = "gazebo_tf_injector";
         ROS_INFO_STREAM("Starting ROS node \"" << nodeName << "\" ...");
-        ros::M_string remappings;
-        ros::init(remappings, nodeName);
+        this->nodeHandle = ros::NodeHandlePtr(new ros::NodeHandle(nodeName));
+        ROS_INFO("Node started.");
         this->nodeHandle = ros::NodeHandlePtr(new ros::NodeHandle());
 
         this->model = model;
